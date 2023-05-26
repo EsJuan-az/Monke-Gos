@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
+
+
 const instance_id  = (process.env.INSTANCE_ID);
 const ultramsg_token = (process.env.TOKEN) ;
 const url  = (process.env.CHAT_API);
