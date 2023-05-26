@@ -20,7 +20,7 @@ for( let cmd of Object.keys(cmdMonke) ){
 }
 const processMessage = async(message) => {
     const {data} = message
-    if(data.author == ""){
+    if(data?.author == ""){
         return
     }
     data.who = data.author.replace(":9", "")
