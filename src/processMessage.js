@@ -20,7 +20,8 @@ for( let cmd of Object.keys(cmdMonke) ){
 }
 const processMessage = async(message) => {
     const {data} = message
-    if(data?.author == ""){
+    if(data?.author == "" || !data?.author || !data.to || !data.from ){
+        console.log("Omitting request");
         return
     }
     data.who = data.author.replace(":9", "")
