@@ -32,7 +32,8 @@ const processMessage = async(message) => {
     } 
     
     for(let bot of Bots){
-        evalBot(bot, data)
+        let data2 = {...data}
+        evalBot(bot, data2)
     }
 }
 export {
