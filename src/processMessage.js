@@ -20,11 +20,11 @@ for( let cmd of Object.keys(cmdMonke) ){
 }
 const processMessage = async(message) => {
     const {data} = message
-    if(data?.author == "" || !data?.author || !data.to || !data.from ){
+    if( data?.author == "" || !data?.author || !data?.to || !data?.from || data?.author?.includes(":") ){
         console.log("Omitting request");
         return
     }
-    data.who = data.author.replace(":9", "")
+    data.who = data.author
     data.groupId = data.to.includes("@g.us") ? data.to : data.from
     if( Gos.IdIsAllowed(data.groupId) ){
         utils.increaseExp({...data, bot: Gos});
