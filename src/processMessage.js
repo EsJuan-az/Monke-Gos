@@ -20,11 +20,12 @@ for( let cmd of Object.keys(cmdMonke) ){
 }
 const processMessage = async(message) => {
     const {data} = message
-    if( data?.author == "" || !data?.author || !data?.to || !data?.from || data?.author?.includes(":") ){
+    if( data?.author == "" || !data?.author || !data?.to || !data?.from || /\[.+\]/.test(data?.body)){
+        console.log(data);
         console.log("Omitting request");
         return
     }
-    data.who = data.author
+    data.who = data.author.replace(/:\d+/,"")
     data.groupId = data.to.includes("@g.us") ? data.to : data.from
     if( Gos.IdIsAllowed(data.groupId) ){
         utils.increaseExp({...data, bot: Gos});
@@ -39,7 +40,8 @@ const processMessage = async(message) => {
 export {
     processMessage
 };
-
+// :9
+// [🚫]
 const evalBot = async(bot, data) => {
     let msg = data.body;
     let match = bot.GetCmdMatches(msg);
