@@ -14,7 +14,7 @@ const todos = async(data) => {
     });
     if (author.isAdmin){
         const participantId = participants.map(({id}) => id)
-        bot.MentionPeople(groupId, participantId)
+        bot.MentionPeople(groupId, participantId, {pre : "", after:""})
     }else{
         bot.SendMessage("Debes ser admin para usar esta funcionalidad🚫", groupId)
     }
