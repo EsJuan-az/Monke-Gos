@@ -7,7 +7,7 @@ import { instance_id, ultramsg_token, url } from './global.js';
 class Bot{
     constructor(logPrefix, reqPrefix){
         this.logPrefix = logPrefix;
-        this.commandRegex = new RegExp(`${reqPrefix} \\w{3,}( --\w+)*`);
+        this.commandRegex = new RegExp(`^${reqPrefix} \\w{3,}( --\w+)*$`);
         this.commands = {};
         this.allowed = [];
     }
