@@ -3,7 +3,6 @@ import qs from 'qs';
 import axios from 'axios';
 import Ultramsg from 'ultramsg-whatsapp-api';
 import { instance_id, ultramsg_token, url } from './global.js';
-const api = new Ultramsg(instance_id, ultramsg_token);
 
 class Bot{
     constructor(logPrefix, reqPrefix){
@@ -50,7 +49,23 @@ class Bot{
     async SendMessage(message, destination){
         try{
             let msg = `${this.logPrefix} ${message}`;
-            let response = await api.sendChatMessage(destination, msg);
+
+            let data = qs.stringify({
+                "token": ultramsg_token,
+                "to": destination,
+                "body": msg
+            });
+
+            var config = {
+            method: 'post',
+            url: `${url}/messages/chat`,
+            headers: {  
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data : data
+            };
+
+            let response = await axios(config)
             console.log(response);
             return response.data;
         }catch(err){
@@ -61,7 +76,25 @@ class Bot{
     
     async GetMessages(target, limit = 10){
         try{
-            let response = await api.getChatsMessages(target, limit);
+            var params= {
+                "token": ultramsg_token,
+                "page": 1,
+                "limit": limit,
+                "status": "all",
+                "sort": "desc",
+                "chadId": target,
+            };
+            
+            var config = {
+              method: 'get',
+              url: `${url}/chats/messages`,
+              headers: {  
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              params: params
+            };
+            
+            let response = await axios(config);
             console.log(response.data);
             return response.data;
         }catch(err){
@@ -131,8 +164,26 @@ class Bot{
     }
     async GetMessageById(id){
         try{
-            let response = await api.getMessages(1, 10, "all", "desc", id);
-            return response.messages[1]
+            var params= {
+                "token": ultramsg_token,
+                "page": 1,
+                "limit": 10,
+                "status": "all",
+                "sort": "desc",
+                "id": id
+            };
+            
+            var config = {
+              method: 'get',
+              url: `${url}messages`,
+              headers: {  
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              params: params
+            };
+            
+            let response = await axios(config)
+            return response.data.messages[1]
         }catch(err){
             console.log(err);
             throw new Error(err);
