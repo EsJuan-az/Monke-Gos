@@ -50,7 +50,6 @@ const evalBot = async(bot, data) => {
         if(match){
             let cmd = bot.DecodeCommand(match);
             if(!cmd.command){
-                bot.SendMessage("No existe ese comando💀" , chat);
                 return;
             }
             cmd.command({options: cmd.options, ...data, bot})
