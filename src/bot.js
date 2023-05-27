@@ -127,7 +127,27 @@ class Bot{
             throw new Error(err);
         }
     }
+    async GetProfilePic(id){
+        try{
+            let params = {
+                "token": ultramsg_token,
+                "chatId": id
+            }
+            let config = {
+                method: 'get',
+                url: `${url}contacts/image`,
+                headers:{
+                    'Content-Type': "application/x-www-form-urlencoded"
+                },
+                params:params
+            }
+            const result = await axios(config);
+        }catch(err){
+            console.log(err);
+            throw new Error(err);
+        }
 
+    }
     async MentionPeople(chatId, ids, {pre="", after=""}){
         try{
             let numbers = []

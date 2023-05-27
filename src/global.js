@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import Bot from './bot.js';
 dotenv.config();
 
 
@@ -9,6 +10,7 @@ const rmc = (process.env.RMC_ID);
 const code = (process.env.CODE_ID);
 const port = (process.env.PORT);
 const mongo_cnn = (process.env.MONGO_CNN);
+const admin = new Bot("[👑]", 'admin');
 const exp = {
     chat: 1,
     sticker: 0.5,
@@ -23,5 +25,6 @@ export {
     code,
     port,
     mongo_cnn,
-    exp
+    exp,
+    admin
 };

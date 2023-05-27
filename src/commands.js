@@ -60,6 +60,22 @@ const increaseExp = async(data) => {
     let updateUser = await User.findOneAndUpdate(user._id, {exp: newExp, level: newLevel}, {new: true});
     //Guardar usuario y grupo con 0, 0 si no existe
 }
+const admins = async(data) => {
+    console.log("OnAdmins()");
+    const {bot, groupId, who} = data;
+    const group = await bot.GetGroup(groupId)
+    const {participants} = group.groupMetadata
+    const admins = []
+    let author = null
+    participants.forEach(participant => {
+        if(participant.isAdmin){
+            admins.push(participant.id);
+        }
+    });
+    bot.MentionPeople(groupId, admins, {pre : "", after:""})
+
+}
+
 const rank = async(data) => {
     console.log("OnRank()");
     const {who, groupId, bot} = data;
@@ -83,6 +99,7 @@ const top = async(data) => {
 }
 const monke = {
     todos,
+    admins,
     sticker
 }
 const gos = {
