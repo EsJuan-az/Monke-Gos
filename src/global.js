@@ -10,12 +10,19 @@ const rmc = (process.env.RMC_ID);
 const code = (process.env.CODE_ID);
 const port = (process.env.PORT);
 const mongo_cnn = (process.env.MONGO_CNN);
+const voicerss = (process.env.VOICERSS_KEY);
+const cloudkey = (process.env.CLOUDINARY_KEY)
+const cloud = (process.env.CLOUDINARY_URL)
+const cloudSecret = (process.env.CLOUDINARY_SECRET)
+
 const admin = new Bot("[👑]", 'admin');
 const exp = {
     chat: 1,
     sticker: 0.5,
     image: 0.7,
-    video: 0.9
+    video: 0.9,
+    ptt: 0.2,
+
 }
 export {
     instance_id,
@@ -26,5 +33,6 @@ export {
     port,
     mongo_cnn,
     exp,
-    admin
+    admin,
+
 };

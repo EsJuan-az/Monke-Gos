@@ -7,7 +7,7 @@ import { instance_id, ultramsg_token, url } from './global.js';
 class Bot{
     constructor(logPrefix, reqPrefix){
         this.logPrefix = logPrefix;
-        this.commandRegex = new RegExp(`^${reqPrefix} \\w{3,}( --\w+)*$`);
+        this.commandRegex = new RegExp(`^${reqPrefix} \\w{3,}( \w+)*`);
         this.commands = {};
         this.allowed = [];
     }
@@ -37,7 +37,7 @@ class Bot{
         }else if(ar.length >= 3){
             return {
                 command: this.GetCommand(ar[1]),
-                options: ar.slice(2).map(op => op.replace("--",""))
+                options: ar.slice(2)
             };
         }
     }
@@ -142,6 +142,31 @@ class Bot{
                 params:params
             }
             const result = await axios(config);
+            return result.data
+        }catch(err){
+            console.log(err);
+            throw new Error(err);
+        }
+
+    }
+    async GetContact(id){
+        try{
+            var params= {
+                "token": ultramsg_token,
+                "chatId": id
+            };
+            
+            var config = {
+            method: 'get',
+            url: `${url}contacts/contact`,
+            headers: {  
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            params: params
+            };
+            
+            const result  = await axios(config)
+            return result.data
         }catch(err){
             console.log(err);
             throw new Error(err);
@@ -234,6 +259,7 @@ class Bot{
         }
 
     }
+
 }
 
 export default Bot;

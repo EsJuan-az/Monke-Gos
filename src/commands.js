@@ -16,7 +16,7 @@ const todos = async(data) => {
         const participantId = participants.map(({id}) => id)
         bot.MentionPeople(groupId, participantId, {pre : "", after:""})
     }else{
-        bot.SendMessage("Debes ser admin para usar esta funcionalidad🚫", groupId)
+        // bot.SendMessage("Debes ser admin para usar esta funcionalidad🚫", groupId)
     }
 }
 
@@ -27,10 +27,10 @@ const sticker = async(data) => {
         await bot.SendMessage("Creando Sticker con imagen...", groupId)
         bot.SendSticker(media, groupId);
     }else if(quotedMsg.media){
-        await bot.SendMessage("Creando Sticker con el mensaje referenciado...", groupId)
+        await bot.SendMessage("Creando Sticker con el mensaje referenciado...", groupId);
         bot.SendSticker(quotedMsg.media, groupId);
     }else{
-        await bot.SendMessage("¿Sticker de dónde?", groupId)
+        // await bot.SendMessage("¿Sticker de dónde?", groupId)
     }
 }
 const increaseExp = async(data) => {
@@ -38,7 +38,7 @@ const increaseExp = async(data) => {
     //Buscarlo
     console.log("Haciendo algo");
     const {who, groupId, type, bot} = data;
-    let user = await User.findOne({userId: who, chatId: groupId})
+    let user = await User.findOne({userId: who, chatId: groupId});
     if(!user){
         if(who == "" || groupId == ""){
             return
@@ -57,7 +57,7 @@ const increaseExp = async(data) => {
         newExp = 0;
         bot.MentionPeople(groupId, [who], {pre: "Felicidades, ", after: `\nHas subido a nivel ${newLevel}`})
     }
-    let updateUser = await User.findOneAndUpdate(user._id, {exp: newExp, level: newLevel}, {new: true});
+    let updateUser = await User.findOneAndUpdate(user._id, {exp: parseFloat(newExp), level: parseInt(newLevel)}, {new: true});
     //Guardar usuario y grupo con 0, 0 si no existe
 }
 const admins = async(data) => {
@@ -91,7 +91,7 @@ const rank = async(data) => {
         rank ++;
     }
     
-    bot.MentionPeople(groupId, [who], {pre: "Estadísticas: ", after: `\nExp: ${user.exp}/${user.level * 10}\nNivel: ${user.level}\nRank#${rank}`})
+    bot.MentionPeople(groupId, [who], {pre: "Estadísticas: ", after: `\nExp🌟: ${user.exp}/${user.level * 10}\nNivel🎓: ${user.level}\nRank#${rank}👑`})
 }
 
 const top = async(data) => {

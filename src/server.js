@@ -35,12 +35,14 @@ class Server{
             try{
                 const {chatId} = req.params;
                 const research = await User.find({chatId});
-                const photoRequest = await Promise.all([...research].map(user => admin.GetProfilePic(user.userId)))
-                const groupPic = await admin.GetProfilePic(chatId);
+                const PhotoRequests = await Promise.all([...research].map(user => admin.GetProfilePic(user.userId)))
+                const UserRequests = await Promise.all([...research].map(user => user))
                 const merged = research.map((user, index) => ({...user, ...photoRequest}))
+                const groupPic = await admin.GetProfilePic(chatId);
                 return res.status(200).json({
-                    merged,
-                    groupPic,
+                    photoRequest
+                    // merged,
+                    // groupPic,
                 })
             }catch(err){
                 res.status(500).json({
