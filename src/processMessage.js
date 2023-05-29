@@ -4,7 +4,6 @@ import { monke as cmdMonke, utils, gos as cmdGos } from './commands.js';
 
 const Gos = new Bot("[👻]", "gos");
 const Monke = new Bot("[🐵]", "monke");
-
 const Bots = [Monke, Gos];
 Monke.AddAllowed(rmc);
 Monke.AddAllowed(code);
@@ -21,7 +20,6 @@ for( let cmd of Object.keys(cmdMonke) ){
 const processMessage = async(message) => {
     const {data} = message
     if( data?.author == "" || !data?.author || !data?.to || !data?.from || /\[.+\]/.test(data?.body)){
-        console.log(data);
         console.log("Omitting request");
         return
     }

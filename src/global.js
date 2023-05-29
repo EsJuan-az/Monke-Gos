@@ -1,8 +1,9 @@
 import dotenv from 'dotenv';
 import Bot from './bot.js';
+import { TaskManager } from './taskManager.js'
 dotenv.config();
 
-
+const findChatByUserAndGroup = (user, groupId) => user?.levels.find( ({chatId}) => chatId == groupId );
 const instance_id  = (process.env.INSTANCE_ID);
 const ultramsg_token = (process.env.TOKEN) ;
 const url  = (process.env.CHAT_API);
@@ -14,8 +15,9 @@ const voicerss = (process.env.VOICERSS_KEY);
 const cloudkey = (process.env.CLOUDINARY_KEY)
 const cloud = (process.env.CLOUDINARY_URL)
 const cloudSecret = (process.env.CLOUDINARY_SECRET)
-
+const taskManager = new TaskManager()
 const admin = new Bot("[👑]", 'admin');
+const Cum = new Bot("[🧁]", "cum");
 const exp = {
     chat: 1,
     sticker: 0.5,
@@ -25,6 +27,7 @@ const exp = {
 
 }
 export {
+    findChatByUserAndGroup,
     instance_id,
     ultramsg_token,
     url,
@@ -34,5 +37,10 @@ export {
     mongo_cnn,
     exp,
     admin,
-
+    taskManager,
+    voicerss,
+    cloudkey,
+    cloud,
+    cloudSecret,
+    Cum
 };

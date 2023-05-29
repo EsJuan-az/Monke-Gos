@@ -2,14 +2,20 @@
 import qs from 'qs';
 import axios from 'axios';
 import Ultramsg from 'ultramsg-whatsapp-api';
-import { instance_id, ultramsg_token, url } from './global.js';
+import { instance_id, ultramsg_token, url, taskManager } from './global.js';
 
 class Bot{
     constructor(logPrefix, reqPrefix){
+        this.manager = taskManager;
         this.logPrefix = logPrefix;
-        this.commandRegex = new RegExp(`^${reqPrefix} \\w{3,}( \w+)*`);
+        this.commandRegex = new RegExp(`^${reqPrefix} \\w{3,}( \\S+)*`);
         this.commands = {};
         this.allowed = [];
+    }
+    DecodeCommand(command){
+        const cmd = this.manager.DecodeCommand(command);
+        cmd.command = !!cmd.command ? this.GetCommand(cmd.command) : false
+        return cmd
     }
     AddCommand(name, newCommand){
         this.commands[name] = newCommand;
@@ -28,20 +34,6 @@ class Bot{
         }
         return null;
     }
-    DecodeCommand(command){
-        let ar = command.split(" ");
-        if(ar.length == 2){
-            return {
-                command: this.GetCommand(ar[1])
-            };
-        }else if(ar.length >= 3){
-            return {
-                command: this.GetCommand(ar[1]),
-                options: ar.slice(2)
-            };
-        }
-    }
-
     GetCmdMatches(cmd){
         let matches = cmd.match(this.commandRegex);
         return !!matches ? matches[0] : null;
@@ -74,105 +66,7 @@ class Bot{
         }
     }
     
-    async GetMessages(target, limit = 10){
-        try{
-            var params= {
-                "token": ultramsg_token,
-                "page": 1,
-                "limit": limit,
-                "status": "all",
-                "sort": "desc",
-                "chadId": target,
-            };
-            
-            var config = {
-              method: 'get',
-              url: `${url}/chats/messages`,
-              headers: {  
-                'Content-Type': 'application/x-www-form-urlencoded'
-              },
-              params: params
-            };
-            
-            let response = await axios(config);
-            console.log(response.data);
-            return response.data;
-        }catch(err){
-            console.log(err);
-            throw new Error(err);
-        }
-    }
     
-    async GetGroup(groupId){
-        try{
-            let params= {
-                "token": ultramsg_token,
-                "groupId": groupId,
-                "priority": ""
-            };
-            
-            let config = {
-              method: 'get',
-              url: `${url}groups/group`,
-              headers: {  
-                'Content-Type': 'application/x-www-form-urlencoded'
-              },
-              params: params
-            };
-            
-            let response = await axios(config);
-            return response.data
-        }catch(err){
-            console.log(err);
-            throw new Error(err);
-        }
-    }
-    async GetProfilePic(id){
-        try{
-            let params = {
-                "token": ultramsg_token,
-                "chatId": id
-            }
-            let config = {
-                method: 'get',
-                url: `${url}contacts/image`,
-                headers:{
-                    'Content-Type': "application/x-www-form-urlencoded"
-                },
-                params:params
-            }
-            const result = await axios(config);
-            return result.data
-        }catch(err){
-            console.log(err);
-            throw new Error(err);
-        }
-
-    }
-    async GetContact(id){
-        try{
-            var params= {
-                "token": ultramsg_token,
-                "chatId": id
-            };
-            
-            var config = {
-            method: 'get',
-            url: `${url}contacts/contact`,
-            headers: {  
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            params: params
-            };
-            
-            const result  = await axios(config)
-            return result.data
-        }catch(err){
-            console.log(err);
-            throw new Error(err);
-        }
-
-    }
     async MentionPeople(chatId, ids, {pre="", after=""}){
         try{
             let numbers = []
@@ -207,33 +101,7 @@ class Bot{
             throw new Error(err);
         }
     }
-    async GetMessageById(id){
-        try{
-            var params= {
-                "token": ultramsg_token,
-                "page": 1,
-                "limit": 10,
-                "status": "all",
-                "sort": "desc",
-                "id": id
-            };
-            
-            var config = {
-              method: 'get',
-              url: `${url}messages`,
-              headers: {  
-                'Content-Type': 'application/x-www-form-urlencoded'
-              },
-              params: params
-            };
-            
-            let response = await axios(config)
-            return response.data.messages[1]
-        }catch(err){
-            console.log(err);
-            throw new Error(err);
-        }
-    }
+    
     async SendSticker(link, chat){
         try{
             var data = qs.stringify({
@@ -259,7 +127,32 @@ class Bot{
         }
 
     }
-
+    async SendAudio(msg, groupId){
+        try{
+            const {url: msg_url, public_id} = await this.manager.TextToSpeech(msg)
+            const data = qs.stringify({
+                "token": ultramsg_token,
+                "to": groupId,
+                "audio": msg_url
+            });
+            
+            const config = {
+              method: 'post',
+              url: `${url}messages/audio`,
+              headers: {  
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              data : data
+            };
+            
+            const {data: sent} = await axios(config)
+            const del = await this.manager.CloudDestroy(public_id, "video")
+            return {...sent, ...del}
+        }catch(err){
+            console.log(err);
+            throw new Error(err);
+        }
+    }
 }
 
 export default Bot;
