@@ -42,7 +42,7 @@ class Server{
                 const photoRequests = await Promise.all(research.map(user => admin.manager.GetProfilePic(user.userId)))
                 const users = research.map((user, index) => {
                     let {levels, ...restUser} = user._doc
-                    return { ...restUser, group: findChatByUserAndGroup(user, groupId), photo: photoRequests[index].success}
+                    return { ...restUser, group: findChatByUserAndGroup(user, groupId), photo: (photoRequests[index]).success}
                 })
                 const groupPic = (await admin.manager.GetProfilePic(groupId)).success;
                 return res.status(200).json({
@@ -58,35 +58,44 @@ class Server{
             
         })
         this.app.get('/bday', async(req, res) => {
-            let today = new Date()
-            today = {
-                day: today.getDate(),
-                month: today.getMonth()
-            }
-            let cums = (await User.find({}))
-            // cums = cums.filter( user => new Date(user.birthday).getDate() == today.day && new Date(user.birthday).getMonth() == today.month )
-            cums = cums.filter(({birthday}) => {
-                const birthdate = new Date(birthday)
-                return birthdate.getDate() == today.day && birthdate.getMonth() == today.month 
-            })
-            if(cums.length == 0){
-                return
-            }
-            const mentions = {}
-            cums.forEach(cum => {
-                cum.levels.forEach(group => {
-                    if(!mentions[group.chatId]){
-                        mentions[group.chatId] = [];
-                    }
-                    mentions[group.chatId].push(cum.userId)
+            try{
+                console.log("OnBday()");
+                let today = new Date()
+                today = {
+                    day: today.getDate(),
+                    month: today.getMonth()
+                }
+                let cums = (await User.find({}))
+                // cums = cums.filter( user => new Date(user.birthday).getDate() == today.day && new Date(user.birthday).getMonth() == today.month )
+                cums = cums.filter(({birthday}) => {
+                    const birthdate = new Date(birthday)
+                    return birthdate.getDate() == today.day && birthdate.getMonth() == today.month 
                 })
-            })
-            Object.keys(mentions).forEach(groupId => {
-                const people = mentions[groupId]
-                Cum.MentionPeople(groupId, people, {pre: "Buenos días y un muy felíz cum para: ", after:""})
-            })
-            console.log("Se supone que hace lo de bday");
-            res.status(200).json("Holaaa")
+                if(cums.length == 0){
+                    return
+                }
+                const mentions = {}
+                cums.forEach(cum => {
+                    cum.levels.forEach(group => {
+                        if(!mentions[group.chatId]){
+                            mentions[group.chatId] = [];
+                        }
+                        mentions[group.chatId].push(cum.userId)
+                    })
+                })
+                Object.keys(mentions).forEach(groupId => {
+                    const people = mentions[groupId]
+                    Cum.MentionPeople(groupId, people, {pre: "Buenos días y un muy felíz cum para: ", after:""})
+                })
+                
+                res.status(200).json("Todo ok")  
+            }catch(err){
+                console.log(err);
+                res.status(500).json({
+                    err: 'Falló alguna de las peticiones'
+                })
+            }
+            
         })
     }
     listen(){
