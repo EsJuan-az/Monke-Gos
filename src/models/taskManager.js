@@ -1,15 +1,21 @@
-
+//Node req
 import axios from 'axios';
-import { instance_id, ultramsg_token, url, voicerss } from './global.js';
-import { admin, taskManager, cloudkey, cloudSecret, cloud } from "./global.js";
 import { v2 as cloudinary } from 'cloudinary'
-export class TaskManager{
+
+//Internal req
+import {  cloudkey, cloudSecret, ultramsg_token, url, voicerss } from '../env/env.js';
+
+class TaskManager{
+    static taskManager;
     constructor(){
         cloudinary.config({
             cloud_name: "dvaqrycs1",
             api_key: cloudkey,
             api_secret: cloudSecret
           });
+        if(!TaskManager.taskManager){
+            TaskManager.taskManager = this;
+        }
     }
     DecodeCommand(command){
         let ar = command.split(" ");
@@ -193,4 +199,10 @@ export class TaskManager{
         console.log(response);
         return response
     }
+}
+
+const sharedInstance = new TaskManager();
+
+export {
+    TaskManager
 }

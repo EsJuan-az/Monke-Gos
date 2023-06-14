@@ -1,12 +1,13 @@
-import dotenv from 'dotenv';
-dotenv.config()
-
+//Node requirements
 import express from "express";
 import bodyParser from "body-parser";
-import { processMessage } from "./processMessage.js";
 import mongoose from 'mongoose';
-import { Cum, admin, findChatByUserAndGroup, mongo_cnn } from './global.js';
-import { User } from './userModel.js';
+
+//Internal requirements
+import { processMessage } from "../helpers/processMessage.js";
+import { findChatByUserAndGroup, mongo_cnn } from '../env/env.js';
+import { admin } from '../env/singleton.js'
+import { User } from '../models/user.js';
 class Server{
     constructor(port){
         this.port = port;
@@ -31,6 +32,7 @@ class Server{
                 res.status(500).end();
             }
         })
+
         this.app.get('/images/:chatId', async(req, res) => {
             try{
                 
@@ -54,9 +56,9 @@ class Server{
                 res.status(500).json({
                     err: 'Falló alguna de las peticiones'
                 })
-            }
-            
+            }  
         })
+
         this.app.get('/bday', async(req, res) => {
             try{
                 console.log("OnBday()");
@@ -87,7 +89,6 @@ class Server{
                     const people = mentions[groupId]
                     Cum.MentionPeople(groupId, people, {pre: "Buenos días y un muy felíz cum para: ", after:""})
                 })
-                
                 res.status(200).json("Todo ok")  
             }catch(err){
                 console.log(err);

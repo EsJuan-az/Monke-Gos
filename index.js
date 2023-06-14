@@ -1,12 +1,14 @@
-import { port } from './src/global.js'
-import { Server } from './src/server.js';
+console.log("Index");
+
+import { port } from './src/env/env.js'
+import { Server } from './src/models/server.js';
 import { test } from './src/test.js';
 
-// SendMessage("Zootopia 2", process.env.RMC_ID)
+console.log("Holaa");
 try{
     const sv = new Server(port);
     test();
-    sv.listen()
+    sv.listen();
 }catch{
     
 }
