@@ -1,13 +1,14 @@
-import { User } from "../models/user.js";
-import { exp } from "../env/env.js";
+import { User } from "../models/index.js";
+import { exp } from "../env/index.js";
 
-const increaseExp = async(data) => {
+const increaseExp = async( { message, who, bot } ) => {
     console.log("OnIncreaseExp()");
     //Buscarlo
-    const {who, groupId, type, bot} = data;
-
+    const { type } = message;
+    const chat = await message.getChat();
+    const contact = await message.getContact();
     //Just in case that neither who nor groupId exist, we'll abort
-    if(who == "" || groupId == ""){
+    if(who == ""){
         return
     }
 
@@ -16,21 +17,21 @@ const increaseExp = async(data) => {
     if(!user){
         user = User();
         user.userId = `${who}`;
-        user.name = `${data.pushname}`
+        user.name = `${message.notifyName}`
         user.levels = [{
-            chatId: `${groupId}`,
+            chatId: `${chat.id}`,
             exp: 0,
             level: 1,
         }]
         await user.save();
         //now that we did that, we just finish
-        return
+        return;
     }
     //we try to get the chat data, if group doesn't exist we'll add it
-    const chat = user.levels.find( ({chatId}) => chatId == groupId )
-    if( !chat ){
+    const level = user.levels.find( ({chatId}) => chatId == chat.id )
+    if( !level ){
         user.levels.push({
-            chatId: `${groupId}`,
+            chatId: `${chat.id}`,
             exp: 0,
             level: 1,
         })
@@ -38,15 +39,16 @@ const increaseExp = async(data) => {
     //now that we granted user and group, we'll increase the data
     else{
         //We get the new exp and the level (if it's required we level it up)
-        chat.exp = parseFloat(chat.exp) + exp[type];
-        chat.level = parseInt(chat.level);
-        if(chat.exp >= chat.level * 10){
-            chat.level++;
-            chat.exp = 0;
+        let adexp = exp[type] || 0.1
+        level.exp = parseFloat(level.exp) + adexp;
+        level.level = parseInt(level.level);
+        if(level.exp >= level.level * 10){
+            level.level++;
+            level.exp = 0;
             //level ups will be notified
-            bot.MentionPeople(groupId, [who], {pre: "Felicidades, ", after: `\nHas subido a nivel ${chat.level}`});
-            user.levels = user.levels.filter( ({chatId}) => chatId != groupId );
-            user.levels.push(chat)
+            bot.MentionPeople(chat, [contact], `Felicidades $m,\nHas subido a nivel ${level.level}`);
+            user.levels = user.levels.filter( ({chatId}) => chatId != chat.id );
+            user.levels.push(level)
         }
     }
 

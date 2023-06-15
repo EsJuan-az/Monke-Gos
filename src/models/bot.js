@@ -1,25 +1,17 @@
+import  wwjs  from 'whatsapp-web.js';
+import { TaskManager } from '../models/index.js'
 
-import qs from 'qs';
-import axios from 'axios';
-import {  ultramsg_token, url } from '../env/env.js';
-import { TaskManager } from '../models/taskManager.js'
+const MessageMedia = wwjs.MessageMedia;
 
 class Bot{
-    constructor(logPrefix, reqPrefix){
+    constructor(logPrefix, reqPrefix, set){
         this.manager = TaskManager.taskManager;
         this.logPrefix = logPrefix;
         this.commandRegex = new RegExp(`^${reqPrefix} \\w{3,}( \\S+)*`);
-        this.commands = {};
-        this.middlewares = [];
-        this.allowed = [];
-    }
-    //We send the bot it's respective chats and processes
-    Set({cmds, chats, middlewares }){
-        chats.forEach( chat => this.AddAllowed( chat ) );
-        middlewares.forEach( middleware => this.AddMiddleware(middleware) );
-        for( let cmd in cmds){
-            this.AddCommand(cmd, cmds[cmd]);
-        }
+        this.commands = set?.cmds || {};
+        this.middlewares = set?.middlewares || [];
+        this.allowed = set?.chats || [];
+        console.log( logPrefix, this.commands);
     }
     //Decode a string and execute the respective command
     DecodeCommand(command){
@@ -56,11 +48,11 @@ class Bot{
     }
 
     async EvalBot( data ) {
-        this.middlewares.forEach( middleware => middleware( data ));
         //We get some data from the msg object without affecting it
-        const msg = data.body;
+        const msg = data.message.body;
         const match = this.GetCmdMatches(msg);
-        const chat = this.IdIsAllowed(data.id);
+        const chat = this.IdIsAllowed( data.message.id._serialized   );
+        if( chat ) this.middlewares.forEach( middleware => middleware( {...data, bot: this} ));
         if( chat && match){
                 const cmd = this.DecodeCommand(match);
                 //If there's no command object we'll ommit
@@ -73,131 +65,77 @@ class Bot{
     
     }
 
-    async SendMessage(message, destination){
+    async SendMessage(chat, message){
         try{
             //Add the prefix to the message
             let msg = `${this.logPrefix} ${message}`;
 
-            //Configure the data
-            let data = qs.stringify({
-                "token": ultramsg_token,
-                "to": destination,
-                "body": msg,
-            });
-
-            //Set the request
-            var config = {
-                method: 'post',
-                url: `${url}/messages/chat`,
-                headers: {  
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                data : data,
-            };
-            //Do and get the request's response
-            let response = await axios(config);
-            return response.data;
+            //now, based on the chat, we send the message
+            let response = await chat.sendMessage( msg )
+            return response;
         }catch(err){
             console.log(err);
-            throw new Error(err);
         }
     }
     
     //Mention people with a message before and after those mentions
-    async MentionPeople(chatId, ids, {pre="", after=""}){
+    async MentionPeople(chat, mentions, ftext){
         try{
-            let numbers = []
-            let msg = ""
-            //We'll add every number to the middle message and every id to the mentioned id's
-            ids.forEach(id => {
-                let number = id.replace("@c.us", "")
-                msg += `@${number} `
-                numbers.push(parseInt(number))
-            });
+            let mentionText = "";
+            //We create a mention text and embed it in the original message
+            mentions.forEach( contact => mentionText += ` @${contact.id.user} ` );
+            ftext = ftext.replace( "$m", mentionText);
+            let msg = `${this.logPrefix} ${ftext}`;
 
-            //We turn the mentioned id's into a string without the []
-            let mentions = JSON.stringify(numbers).replace("[", "").replace("]", "").replace(" ", "");
-            //Configure the request
-            let data = qs.stringify({
-                "token": ultramsg_token,
-                "to": chatId,
-                "body": `${this.logPrefix}\n${pre}${msg}${after}`,
-                "mentions": mentions ,
+            //We send it and get it
+            let response = await chat.sendMessage( msg, {
+                mentions: mentions
             });
-            //Prepare the request
-            let config = {
-                method: 'post',
-                url: `${url}messages/chat`,
-                headers: {  
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                data : data
-            };
-            //Send it and get it
-            let response = await axios(config);
-            return response.data
+            return response;
         }
         catch(err){
             console.log(err);
-            throw new Error(err);
         }
     }
     
-    async SendSticker(link, chat){
+    async SendSticker(chat, media){
         try{
-            //Using the link we'll simply do and get the request
-            var data = qs.stringify({
-                "token": ultramsg_token,
-                "to": chat,
-                "sticker": link
+            let response = await chat.sendMessage( media, {
+                sendMediaAsSticker: true,
+                stickerAuthor: 'JuanEs-az',
+                stickerName: 'Monke-Gos',
+                media: media
             });
-            
-            var config = {
-              method: 'post',
-              url: `${url}messages/sticker`,
-              headers: {  
-                'Content-Type': 'application/x-www-form-urlencoded'
-              },
-              data : data
-            };
-            
-            let response = await axios(config);
-            return response.data
+            return response;
         }catch(err){
             console.log(err);
-            throw new Error(err);
+            this.SendMessage(chat, "No es posible hacer un sticker con eso😒")
         }
 
     }
-    async SendAudio(msg, groupId){
+    async SendAudio(chat, msg){
         try{
             //Now, we turn the text into speech through the task manager
             const {url: msg_url, public_id} = await this.manager.TextToSpeech(msg);
+            console.log(msg_url);
             //Now that we got it, we use this to prepare the request and use the public id to delete the audio later
-            const data = qs.stringify({
-                "token": ultramsg_token,
-                "to": groupId,
-                "audio": msg_url
-            });
-            
-            const config = {
-              method: 'post',
-              url: `${url}messages/audio`,
-              headers: {  
-                'Content-Type': 'application/x-www-form-urlencoded'
-              },
-              data : data
-            };
+
             //We send the audio
-            const {data: sent} = await axios(config)
+            const media = MessageMedia.fromUrl( msg_url );
+            const response = await chat.sendMessage(media, {
+                sendAudioAsVoice: true,
+                media: media
+            })
+            console.log(response);
             //We delete it in the cloud
             const del = await this.manager.CloudDestroy(public_id, "video")
-            return {...sent, ...del}
+            return {...response, ...del}
         }catch(err){
             console.log(err);
-            throw new Error(err);
         }
     }
 }
 
-export default Bot;
+export {
+    Bot
+};

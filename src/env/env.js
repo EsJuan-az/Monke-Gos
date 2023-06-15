@@ -1,8 +1,7 @@
 //Dotenv
 import dotenv from 'dotenv';
 dotenv.config();
-const ultramsg_token = (process.env.TOKEN) ;        //Ultramsg token
-const url  = (process.env.CHAT_API);                //Ultramsg url
+
 const rmc = (process.env.RMC_ID);                   //Custom group environment variable
 const code = (process.env.CODE_ID);                 //Custom group environment variable
 const port = (process.env.PORT);                    //Server port
@@ -25,9 +24,6 @@ const findChatByUserAndGroup = (user, groupId) => user?.levels.find( ({chatId}) 
 
 
 export  {
-    //Ultramsg
-    ultramsg_token,
-    url,
     port,
     //Chat codes
     rmc,

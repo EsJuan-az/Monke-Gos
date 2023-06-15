@@ -3,8 +3,8 @@ import axios from 'axios';
 import { v2 as cloudinary } from 'cloudinary'
 
 //Internal req
-import {  cloudkey, cloudSecret, ultramsg_token, url, voicerss } from '../env/env.js';
-
+import {  cloudkey, cloudSecret, voicerss } from '../env/index.js';
+const url = ""
 class TaskManager{
     static taskManager;
     constructor(){
@@ -161,7 +161,7 @@ class TaskManager{
         encodedParams.set('src', msg);
         encodedParams.set('hl', 'es-es');
         encodedParams.set('r', '0');
-        encodedParams.set('c', 'mp3');
+        encodedParams.set('c', 'OGG');
         encodedParams.set('f', '16khz_16bit_mono');
         encodedParams.set('b64', true);
 

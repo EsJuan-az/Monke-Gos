@@ -1,38 +1,67 @@
 //Node requirements
 import express from "express";
 import bodyParser from "body-parser";
+import qrcode from 'qrcode-terminal';
+import wwjs from 'whatsapp-web.js';
+import wwjsmongo from 'wwebjs-mongo'
 import mongoose from 'mongoose';
+
+const RemoteAuth = wwjs.RemoteAuth;
+const Client = wwjs.Client;
+const MongoStore = wwjsmongo.MongoStore;
 
 //Internal requirements
 import { processMessage } from "../helpers/processMessage.js";
-import { findChatByUserAndGroup, mongo_cnn } from '../env/env.js';
-import { admin } from '../env/singleton.js'
+import { admin, common, findChatByUserAndGroup, mongo_cnn } from '../env/index.js'
 import { User } from '../models/user.js';
 class Server{
+    static client;
+    static store;
     constructor(port){
         this.port = port;
         this.app = express();
         this.config();
         this.routes();
-
+    }
+    setClient(){
+        Server.client.on('qr', qr => {
+            qrcode.generate(qr, { small: true });
+        });
+        Server.client.on('ready', async() => {
+            console.log('Client is ready!');
+        });
+        Server.client.on('message_create', message => {
+            processMessage( message, common );
+        });
+        Server.client.on('remote_session_saved', () => {
+            console.log('Remote session saved');
+        })
     }
     async cnnConnect(){
         await mongoose.connect(mongo_cnn);
-        console.log("Connected to BD")
+        console.log("Connected to BD");
+        //After the connection, we create the cli
+        Server.store = new MongoStore({ mongoose: mongoose });
+        Server.client = new Client({
+                puppeteer: {
+                authStrategy: new RemoteAuth({
+                    clientId: 'main',
+                    store: Server.store,
+                    backupSyncIntervalMs:300000,
+                }),
+                product: "chrome",
+                executablePath: "/usr/bin/google-chrome",
+                args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox'
+                ],
+            }
+        });
     }
     config(){
         this.app.use(bodyParser.json());
     }
     routes(){
-        this.app.post('/ultramsgwebhook', async(req, res) => {
-            try{
-                processMessage(req.body);
-                res.status(200).end();
-            }catch{
-                res.status(500).end();
-            }
-        })
-
         this.app.get('/images/:chatId', async(req, res) => {
             try{
                 
@@ -100,9 +129,13 @@ class Server{
         })
     }
     listen(){
-        this.app.listen(this.port, () => {
-            console.log(`Webhook online on port ${this.port}`);
-            this.cnnConnect();
+        this.app.listen(this.port, async () => {
+            console.log(`Server online on port ${this.port}`);
+            await this.cnnConnect();
+
+            this.setClient();
+            //Now that the CLI's ready, we initialize it
+            Server.client.initialize();
         });
     }
 }

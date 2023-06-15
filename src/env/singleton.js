@@ -1,12 +1,19 @@
 //Model and Requirements import
-import Bot from '../models/bot.js';
+
+import { setGos, setMonke } from '../helpers/index.js';
+import { Bot, BotPool } from '../models/index.js';
+
+
+
+
 
 
 //SharedInstances
 const cum = new Bot("[🧁]", "cum");     //Birthday bot singleton
-const gos = new Bot("[👻]", "gos");
-const monke = new Bot("[🐵]", "monke");
+const gos = new Bot("[👻]", "gos", setGos)
+const monke = new Bot("[🐵]", "monke", setMonke)
 const admin = new Bot("[👑]", "admin")
+const common = new BotPool( monke, gos );
 
 
 
@@ -16,5 +23,6 @@ export {
     cum,
     monke, 
     gos,
-    admin
+    admin,
+    common,
 };
