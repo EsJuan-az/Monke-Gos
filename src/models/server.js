@@ -33,7 +33,20 @@ class WServer{
     }
 
     async startup(){
-        console.log("APP" + colors.green(`:${this.port}`));
+        await Promise.all([
+            this.cnnConnect(),
+            ww.init()
+        ]);
+        
+        return {
+            ok: true,
+            ww
+        }
+    }
+
+    listen(){
+        this.app.listen( this.port, async() => {
+            console.log("APP" + colors.green(`:${this.port}`));
 
         //We register the main pool
         ww.register( common );
@@ -48,21 +61,14 @@ class WServer{
 
             console.log('SET: ' + colors.cyan('done'));
         });
-
+        clg( this.cnnConnect )
         await Promise.all([
             this.cnnConnect(),
             ww.init()
         ]);
         
         console.log('PRESET: ' + colors.cyan('done'));
-        return {
-            ok: true,
-            ww
-        }
-    }
-
-    listen(){
-        this.app.listen( this.port, this.startup);
+        });
     }
 }
 
