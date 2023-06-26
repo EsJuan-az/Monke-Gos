@@ -19,8 +19,9 @@ class WServer{
     }
     routes(){
         this.app.get('/', async function(req, res){
-            const resp = await this.startup();
-            res.json(resp);
+            res.json({
+                ok: true,
+            });
         } )
     }
     async cnnConnect(){
@@ -32,17 +33,7 @@ class WServer{
         console.log('DB: ' + colors.green('up'));
     }
 
-    async startup(){
-        await Promise.all([
-            this.cnnConnect(),
-            ww.init()
-        ]);
-        
-        return {
-            ok: true,
-            ww
-        }
-    }
+
 
     listen(){
         this.app.listen( this.port, async() => {

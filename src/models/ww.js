@@ -26,8 +26,6 @@ class WW{
             puppeteer: {
                 headless: true,
                 args: [ '--no-sandbox', '--disable-setuid-sandbox' ],
-                product: "chrome",
-                executablePath: "/usr/bin/google-chrome",
             },
             
             authStrategy: new LocalAuth({
