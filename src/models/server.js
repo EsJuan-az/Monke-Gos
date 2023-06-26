@@ -19,7 +19,7 @@ class WServer{
     }
     routes(){
         this.app.get('/', function(req, res){
-            res.json({ok: true});
+            res.json({ok: true, ww});
         } )
     }
     async cnnConnect(){
