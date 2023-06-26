@@ -18,8 +18,9 @@ class WServer{
         this.app.use(bodyParser.urlencoded({ extended: false }));
     }
     routes(){
-        this.app.get('/', function(req, res){
-            res.json({ok: true, ww});
+        this.app.get('/', async function(req, res){
+            const resp = await this.startup();
+            res.json(resp);
         } )
     }
     async cnnConnect(){
@@ -31,31 +32,37 @@ class WServer{
         console.log('DB: ' + colors.green('up'));
     }
 
-    listen(){
-        this.app.listen( this.port, async() => {
-            console.log("APP" + colors.green(`:${this.port}`));
+    async startup(){
+        console.log("APP" + colors.green(`:${this.port}`));
 
-            //We register the main pool
-            ww.register( common );
+        //We register the main pool
+        ww.register( common );
 
-            ww.setOnReady(  async() => {
-                //Prueba
-
-                await Promise.all([
-                    common.addChats(...chats)
-                ]);
-
-
-                console.log('SET: ' + colors.cyan('done'));
-            });
+        ww.setOnReady(  async() => {
+            //Prueba
 
             await Promise.all([
-                this.cnnConnect(),
-                ww.init()
+                common.addChats(...chats)
             ]);
-            
-            console.log('PRESET: ' + colors.cyan('done'));
+
+
+            console.log('SET: ' + colors.cyan('done'));
         });
+
+        await Promise.all([
+            this.cnnConnect(),
+            ww.init()
+        ]);
+        
+        console.log('PRESET: ' + colors.cyan('done'));
+        return {
+            ok: true,
+            ww
+        }
+    }
+
+    listen(){
+        this.app.listen( this.port, this.startup);
     }
 }
 
