@@ -61,7 +61,6 @@ class WServer{
 
             console.log('SET: ' + colors.cyan('done'));
         });
-        clg( this.cnnConnect )
         await Promise.all([
             this.cnnConnect(),
             ww.init()
