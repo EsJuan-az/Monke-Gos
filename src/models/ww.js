@@ -1,14 +1,15 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, RemoteAuth  } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const colors = require('@colors/colors');
+
 class WW{
     constructor(){
         this.pools = [];
         this.up = false;
         this.onReady = () => {};
     }
-    async init(){
-        this.getClient();
+    async init( store ){
+        await this.getClient( store );
         this.setClient();
         this.client.initialize();
         console.log('CLIENT: ' + colors.blue('on'));
@@ -20,16 +21,19 @@ class WW{
     register( pool ){
         this.pools.push( pool );
     }
-    getClient(){
+    async getClient( store ){
         // Use the saved values
+        this.store = store;
+        
         this.client = new Client({
             puppeteer: {
                 headless: true,
-                args: [ '--no-sandbox', '--disable-setuid-sandbox' ],
+
             },
-            
-            authStrategy: new LocalAuth({
-                clientId: "juanes-az"
+            authStrategy: new RemoteAuth ({
+                clientId: "juanes-az",
+                store,
+                backupSyncIntervalMs: 300000,
             })
 
         });
@@ -54,6 +58,11 @@ class WW{
         this.client.on('authenticated', () => {    
             console.log('SESSION: ' + colors.yellow('gotten'));
         });
+
+        this.client.on('remote_session_saved', () => {
+            console.log('SESSION: ' + colors.green('saved'));
+        });
+         
          
     }
 }
