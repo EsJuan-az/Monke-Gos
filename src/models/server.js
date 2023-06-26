@@ -18,7 +18,9 @@ class WServer{
         this.app.use(bodyParser.urlencoded({ extended: false }));
     }
     routes(){
-
+        this.app.get('/', function(req, res){
+            res.json({ok: true});
+        } )
     }
     async cnnConnect(){
         const options = {
