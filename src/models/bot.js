@@ -1,141 +1,75 @@
-import  wwjs  from 'whatsapp-web.js';
-import { TaskManager } from '../models/index.js'
-
-const MessageMedia = wwjs.MessageMedia;
-
 class Bot{
-    constructor(logPrefix, reqPrefix, set){
-        this.manager = TaskManager.taskManager;
-        this.logPrefix = logPrefix;
-        this.commandRegex = new RegExp(`^${reqPrefix} \\w{3,}( \\S+)*`);
-        this.commands = set?.cmds || {};
-        this.middlewares = set?.middlewares || [];
-        this.allowed = set?.chats || [];
-        console.log( logPrefix, this.commands);
+    constructor(prefix, inputPrefix, settings){
+        this.prefix = prefix;
+        this.regexp = new RegExp(`^${inputPrefix} \\w{3,}( \\S+)*`);
+        this.settings = settings;
     }
-    //Decode a string and execute the respective command
-    DecodeCommand(command){
-        const cmd = this.manager.DecodeCommand(command);
-        //if there's no command we'll return false, otherwise we'll return the command
-        cmd.command = !!cmd.command ? this.GetCommand(cmd.command) : false
-        return cmd
+    async eval( messageRequest ){
+        //We run the middlewares
+
+        this.settings.middlewares.forEach( mdw => {
+            mdw.execute( this, messageRequest, []);
+        });
+        //We get the matches and the commands
+        const matches = messageRequest.message.body.match( this.regexp );
+        if( !matches ) return;
+        const {command, options} = this.decode( matches[0] );
+
+        //If there's no command, we quit
+        if( !command ) return;
+        command.execute( this, messageRequest, options )
     }
 
-    AddMiddleware(middleware){
-        this.middlewares.push(middleware);
+    decode( match ){
+        let arr = match.split(' ');
+        const details = {};
+        details.command = this.settings.commands.find( cmd =>  cmd.name == arr[1]) || null;
+        details.options = arr.length > 2 ? arr.slice(2) : [];
+        return details;
     }
-    AddCommand(name, newCommand){
-        this.commands[name] = newCommand;
-    }
-    GetCommand(name){
-        return this.commands[name];
-    }
-    AddAllowed(chat){
-        this.allowed.push(chat);
-    }
-    //Verify an id is valid for executing the command
-    IdIsAllowed(id){
-        for(let chatId of this.allowed){
-            if( id.includes(chatId) ){
-                return chatId;
-            }
-        }
-        return null;
-    }
-    GetCmdMatches(cmd){
-        let matches = cmd.match(this.commandRegex);
-        return !!matches ? matches[0] : null;
-    }
-
-    async EvalBot( data ) {
-        //We get some data from the msg object without affecting it
-        const msg = data.message.body;
-        const match = this.GetCmdMatches(msg);
-        const chat = this.IdIsAllowed( data.message.id._serialized   );
-        if( chat ) this.middlewares.forEach( middleware => middleware( {...data, bot: this} ));
-        if( chat && match){
-                const cmd = this.DecodeCommand(match);
-                //If there's no command object we'll ommit
-                if(!cmd.command){
-                    return;
-                }
-                //Now we exec the command sending the bod and the options
-                cmd.command({options: cmd.options, ...data, bot: this});
-        }
-    
-    }
-
-    async SendMessage(chat, message){
+    async sendMessage( chat, text ){
         try{
-            //Add the prefix to the message
-            let msg = `${this.logPrefix} ${message}`;
-
-            //now, based on the chat, we send the message
-            let response = await chat.sendMessage( msg )
-            return response;
+            await chat.sendMessage( `${this.prefix} ${text}` );
+            return { ok: true }
         }catch(err){
-            console.log(err);
+            return { ok: false, err }
         }
     }
-    
-    //Mention people with a message before and after those mentions
-    async MentionPeople(chat, mentions, ftext){
+    async replyMessage( message, text ){
         try{
-            let mentionText = "";
-            //We create a mention text and embed it in the original message
-            mentions.forEach( contact => mentionText += ` @${contact.id.user} ` );
-            ftext = ftext.replace( "$m", mentionText);
-            let msg = `${this.logPrefix} ${ftext}`;
-
-            //We send it and get it
-            let response = await chat.sendMessage( msg, {
-                mentions: mentions
-            });
-            return response;
-        }
-        catch(err){
-            console.log(err);
+            await message.reply( `${this.prefix} ${text}` );
+            return { ok: true }
+        }catch(err){
+            return { ok: false, err }
         }
     }
-    
-    async SendSticker(chat, media){
+    async sendSticker( chat, media ){
         try{
-            let response = await chat.sendMessage( media, {
+            await chat.sendMessage( media, {
                 sendMediaAsSticker: true,
-                stickerAuthor: 'JuanEs-az',
-                stickerName: 'Monke-Gos',
-                media: media
+                stickerAuthor: 'Monke-Gos',
+                stickerName: this.prefix,
+                stickerCategories: this.prefix,
+                media
             });
-            return response;
+            return { ok: true }
         }catch(err){
-            console.log(err);
-            this.SendMessage(chat, "No es posible hacer un sticker con eso😒")
+            return { ok: false, err }
         }
-
     }
-    async SendAudio(chat, msg){
+    async mention( chat, contacts, format ){
+        let mentions = contacts.reduce( ( value, contact ) => value + ` @${contact.id.user}`, '' );
         try{
-            //Now, we turn the text into speech through the task manager
-            const {url: msg_url, public_id} = await this.manager.TextToSpeech(msg);
-            console.log(msg_url);
-            //Now that we got it, we use this to prepare the request and use the public id to delete the audio later
-
-            //We send the audio
-            const media = MessageMedia.fromUrl( msg_url );
-            const response = await chat.sendMessage(media, {
-                sendAudioAsVoice: true,
-                media: media
-            })
-            console.log(response);
-            //We delete it in the cloud
-            const del = await this.manager.CloudDestroy(public_id, "video")
-            return {...response, ...del}
+            await chat.sendMessage( `${this.prefix} ${format}`.replace( '$m', mentions ), {
+                mentions: contacts
+            });
+            return { ok: true }
         }catch(err){
-            console.log(err);
+            return { ok: false, err }
         }
     }
 }
+module.exports = Bot;
 
-export {
-    Bot
-};
+//monke a ab abc
+//monkea

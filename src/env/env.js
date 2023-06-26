@@ -1,16 +1,17 @@
 //Dotenv
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
+const WW = require('../models/ww')
+
 dotenv.config();
 
-const rmc = (process.env.RMC_ID);                   //Custom group environment variable
-const code = (process.env.CODE_ID);                 //Custom group environment variable
+const chats = (process.env.CHATS).split(',').map(id => id.trim());       //Custom group environment variable
 const port = (process.env.PORT);                    //Server port
 const mongo_cnn = (process.env.MONGO_CNN);          //DB connection CNN
 const voicerss = (process.env.VOICERSS_KEY);        //TEXT TO SPEECH API key
 const cloudkey = (process.env.CLOUDINARY_KEY)       //Cloudinary key
 const cloudSecret = (process.env.CLOUDINARY_SECRET);//Cloudinary secret
 const cloud = (process.env.CLOUDINARY_URL);         //Cloudinary url
-
+const ww = new WW();    //Global client
 //Prefixed constantes
 const exp = {
     chat: 1,
@@ -20,14 +21,13 @@ const exp = {
     ptt: 0.2,
 };
 
-const findChatByUserAndGroup = (user, groupId) => user?.levels.find( ({chatId}) => chatId == groupId );
 
 
-export  {
-    port,
+module.exports =   {
+    //Client
+    ww,
     //Chat codes
-    rmc,
-    code,
+    chats, 
     //DB
     mongo_cnn,
     //Voice api
@@ -37,6 +37,6 @@ export  {
     cloud,
     cloudSecret,
     //Prefix
-    findChatByUserAndGroup,
     exp,
+    port,
 }

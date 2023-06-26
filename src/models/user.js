@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
     userId: String,
@@ -7,8 +7,9 @@ const userSchema = new mongoose.Schema({
     levels: [{
       chatId: String,
       exp: Number,
-      level: Number
+      level: Number,
+      totalMsg: Number,
     }]
   });
 
-export const User = mongoose.model('User', userSchema);
+module.exports = mongoose.model('User', userSchema);
