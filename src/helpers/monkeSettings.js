@@ -1,8 +1,21 @@
 const BotSettings = require("../models/botSettings");
 const { ww } = require('../env/env');
 
-const prueba = async( bot, messageRequest, options ) => {
-    await bot.sendMessage(messageRequest.chat, 'pong')
+const buenas = async( bot, messageRequest, options ) => {
+    const hours = new Date().getHours();
+    const { author, chat } = messageRequest.get();
+    let mensaje;
+    if( hours >= 21 ){
+        mensaje = 'Es hora de descansar $m, hasta mañanaaaa🗿😳🥹 ';
+    }
+    else if(hours >= 18){
+        mensaje = 'Buenas nachas, digo, Buenas noches para $m🔥😏🫡 ';
+    }else if( hours >= 12  ){
+        mensaje = 'Buenas tardes mi querido $m😚🥰';
+    }else{
+        mensaje = 'Feliz mañana $m, espero que cumplas tus sueños🤗😳';
+    }
+    await bot.mention(chat, [author], mensaje );
 
 }
 
@@ -57,10 +70,10 @@ const admins = async(bot, messageRequest, options) => {
 }
 const settings = {
     cmds: {
-        prueba,
         sticker,
         todos,
-        admins
+        admins,
+        buenas
     },
     middlewares: {
     }

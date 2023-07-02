@@ -1,12 +1,10 @@
 const bodyParser = require('body-parser');
 const express = require('express');
-const { default: mongoose } = require('mongoose');
 const colors = require('@colors/colors');
 
-const { mongo_cnn, ww, chats } = require('../env/env');
-const { common } = require('./singletons');
-
-const { MongoStore } = require('wwebjs-mongo');
+const { ww, common:commonChats, jv:jvChats, backend } = require('../env/env');
+const { common, jv } = require('./singletons');
+const { default: axios } = require('axios');
 
 class WServer{
     constructor( port ){
@@ -26,18 +24,16 @@ class WServer{
             });
         } )
     }
-    async cnnConnect(){
-        const options = {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-          };
-        await mongoose.connect( mongo_cnn,  options)
-        console.log('DB: ' + colors.green('up'));
-        const store = new MongoStore({ mongoose: mongoose });
-        return store;
+
+    startInterval(){
+        this.interval = setInterval( async() => {
+            try{
+                await axios.get(`${backend}/`);
+            }catch(err){
+                console.log(err)
+            }
+        }, 60 * 1000);
     }
-
-
 
     listen(){
         this.app.listen( this.port, async() => {
@@ -45,23 +41,22 @@ class WServer{
 
         //We register the main pool
         ww.register( common );
+        ww.register( jv )
 
         ww.setOnReady(  async() => {
             //Prueba
 
-            await Promise.all([
-                common.addChats(...chats)
-            ]);
-
-
+            await common.awake();
+            await common.addChats(...commonChats);
+            await jv.addChats(...jvChats);
             console.log('SET: ' + colors.cyan('done'));
         });
 
-        const store = await this.cnnConnect();
-        ww.init(store);
+        ww.init();
 
         
         console.log('PRESET: ' + colors.cyan('done'));
+        this.startInterval();
         });
     }
 }

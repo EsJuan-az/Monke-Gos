@@ -5,6 +5,10 @@ class Pool{
     constructor(...bots){
         this.bots = bots;
         this.chats = [];
+        this.onAwake = () => {};
+    }
+    setOnAwake( handler ){
+        this.onAwake = handler;
     }
     async broadcast(messageRequest){
         this.bots.forEach( bot  => {
@@ -16,6 +20,9 @@ class Pool{
             this.bots.forEach( bot => handler( chat, bot) )
         });
     }
+    async awake(){
+        this.onAwake();
+    }
     async addChats( ...chatIds ){
         const newChats = await Promise.all( chatIds.map( id => ww.client.getChatById( id ) ) );
         this.chats = this.chats.concat( newChats );
@@ -26,8 +33,7 @@ class Pool{
         const chat = this.chats.find( chat => message.id._serialized.includes( chat.id._serialized ) );
         if( !chat ) return
         //Now if the chat exists, we'll get the author and eval the bots
-        const authorId = message.author || message.from.includes('@c') ? message.from : message.to;
-        const author = await ww.client.getContactById( authorId );
+        const author = await message.getContact();
         const req = new MessageRequest( message, chat, author );
         this.broadcast( req );
     }

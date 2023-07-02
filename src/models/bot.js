@@ -1,7 +1,8 @@
 class Bot{
     constructor(prefix, inputPrefix, settings){
+        this.currentActivities = [];
         this.prefix = prefix;
-        this.regexp = new RegExp(`^${inputPrefix} \\w{3,}( \\S+)*`);
+        this.regexp = new RegExp(`^${inputPrefix}( .+)+`);
         this.settings = settings;
     }
     async eval( messageRequest ){
@@ -19,12 +20,11 @@ class Bot{
         if( !command ) return;
         command.execute( this, messageRequest, options )
     }
-
     decode( match ){
-        let arr = match.split(' ');
+        let arr = match.split(/\s/);
         const details = {};
         details.command = this.settings.commands.find( cmd =>  cmd.name == arr[1]) || null;
-        details.options = arr.length > 2 ? arr.slice(2) : [];
+        details.options = arr.length > 2 ? arr.slice(2).map( s => s.split(' ') ).flat()  : [];
         return details;
     }
     async sendMessage( chat, text ){
@@ -58,7 +58,7 @@ class Bot{
         }
     }
     async mention( chat, contacts, format ){
-        let mentions = contacts.reduce( ( value, contact ) => value + ` @${contact.id.user}`, '' );
+        let mentions = [...contacts].reduce( ( value, contact ) => value + `@${contact.id.user}`, '' );
         try{
             await chat.sendMessage( `${this.prefix} ${format}`.replace( '$m', mentions ), {
                 mentions: contacts

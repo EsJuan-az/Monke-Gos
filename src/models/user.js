@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema({
     userId: String,
     name: String,
     birthday: Date,
-    levels: [{
+    groups: [{
       chatId: String,
       exp: Number,
       level: Number,
